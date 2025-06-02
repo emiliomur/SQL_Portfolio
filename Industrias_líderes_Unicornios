@@ -1,0 +1,72 @@
+/*
+En este proyecto tenemos una serie de tablas con información de empresas
+
+TABLA 1: dates
+company_id
+date_joined
+year_founded
+
+TABLA 2: funding
+company_id
+valuation
+funding
+select_investors
+
+TABLA 3: industries
+company_id
+industry
+
+TABLA 4: companies
+company_id
+company
+city
+country
+continent
+
+La misión es:
+A) Restringir la selección a las empresas que se unieron a la lista de 'unicornios' entre 2019 y 2021
+B) Encontrar las 3 industrias con más adiciones (número de empresas) a la lista
+C) Evaluar sus adiciones anuales y las tasaciones promedio en BN USD
+*/ 
+
+
+--Primero hago un join de las tablas para obtener los campos pertinentes. En el mismo paso acoto la información a los periodos pertinentes. Todo esto con una CTE (Common Table Expression)--
+WITH tabla_general AS (
+	SELECT 
+		c.company_id,
+		c.company,
+		i.industry,
+		f.valuation,
+		d.date_joined
+	FROM companies AS c
+	LEFT JOIN industries AS i
+		USING(company_id)
+	LEFT JOIN funding AS f
+		USING(company_id)
+	LEFT JOIN dates AS d
+		USING(company_id)
+	WHERE EXTRACT(YEAR FROM d.date_joined) IN (2019, 2020, 2021)	
+), 
+
+--Agrego la información por el número de adiciones generales en el periodo seleccionado y lo limito a 3 para obtener la selección de industrias (esto con otra CTE)--
+industrias_lideres AS (	
+	SELECT
+		industry,
+		COUNT(*) AS num_unicorns
+	FROM tabla_general
+	GROUP BY industry
+	ORDER BY num_unicorns DESC
+	LIMIT 3)
+
+--Hago un join de las 2 CTE (en este caso es un INNER JOIN para restringir la selección a las industrias de la CTE 'industrias_lideres'.--
+--Después agrego la información para obtener el promedio de la tasación y con un CAST hago que el campo sea numérico. Finalmente ordeno la información.--
+SELECT
+	i.industry,
+	EXTRACT(YEAR FROM t.date_joined) AS year,
+	COUNT(*) AS num_unicorns,
+	ROUND(AVG(t.valuation::NUMERIC)/1000000000.0,2) AS average_valuation_billions
+FROM tabla_general AS t
+INNER JOIN industrias_lideres AS i
+USING (industry)
+GROUP BY i.industry, EXTRACT(YEAR FROM t.date_joined)
+ORDER BY year DESC, num_unicorns DESC;
