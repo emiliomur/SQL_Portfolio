@@ -56,7 +56,8 @@ industrias_lideres AS (
 	FROM tabla_general
 	GROUP BY industry
 	ORDER BY num_unicorns DESC
-	LIMIT 3)
+	LIMIT 3
+)
 
 --Hago un join de las 2 CTE (en este caso es un INNER JOIN para restringir la selección a las industrias de la CTE 'industrias_lideres'.--
 --Después agrego la información para obtener el promedio de la tasación y con un CAST hago que el campo sea numérico. Finalmente ordeno la información.--
