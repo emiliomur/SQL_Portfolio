@@ -1,0 +1,62 @@
+/*En este proyecto tenemos la información de ventas de una empresa ficticia con las siguientes tablas: 
+TABLA 1 orders:
+row_id
+order_id
+order_date
+market
+region
+product_id
+sales
+quantity
+discount
+profit
+
+TABLA 2 product:
+product_id
+category
+sub_category
+product_name
+
+La misión es es averiguar cuáles son los top 5 de productos vendidos por categoría (ventas) */
+
+--Los campos de ventas y unidades no son del tipo correcto, por lo que debemos darles el formato numérico para poder agregarlos más adelante; seleccionamos los campos pertinentes--
+WITH estandarizacion AS (
+	SELECT
+	 	row_id,
+	 	order_id,
+	 	order_date,
+	 	market,
+	 	region,
+	 	product_id,
+	 	sales::NUMERIC,
+	 	quantity::NUMERIC,
+	 	discount::NUMERIC,
+	 	profit::NUMERIC
+	 FROM orders
+	),
+
+--Hacemos un join con la tabla de products para obtener la información de producto--
+--Agregamos (suma) las ventas y las ganancias agrupadas por categorías y productos--
+--Usamos la Window Function RANK () para ordenar las ventas agregadas por categoría--
+resumen AS (
+	SELECT
+		p.category,
+		p.product_name,
+		SUM(o.sales) AS product_total_sales,
+	 	SUM(o.profit) AS product_total_profit,
+		RANK() OVER (PARTITION BY category ORDER BY SUM(sales) DESC) AS product_rank
+	FROM orders AS o
+	LEFT JOIN products AS p
+	USING (product_id)
+	GROUP BY p.category, p.product_name
+	)
+
+--Presentamos los resultados acotando el ranking a los 5 primeros de cada partition--
+SELECT
+	category,
+	product_name,
+	product_total_sales,
+	product_total_profit,
+	product_rank
+FROM resumen
+WHERE product_rank <= 5;
