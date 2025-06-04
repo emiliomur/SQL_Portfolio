@@ -31,6 +31,7 @@ B) Obtener la información agregada (monto de renta) por segmento:
   iii) Máximo
 */ 
 
+--Aquí creamos la segmentación con CASE dentro de una CTE (Common Table Expression) a la que haremos referencia en el paso posterior. La segmentación se basa en el número de reseñas por propiedad en renta--
 WITH segmentacion AS
     (SELECT 
         id,
@@ -44,7 +45,8 @@ WITH segmentacion AS
             Else 'New'
         END as segmento_resenas
     FROM airbnb_host_searches)
-    
+
+--Aquí tomamos la CTE para obtener la información agregada que necesitmamos por segmento: mínimo, máximo y promedio de renta-- 
 SELECT
     segmento_resenas,
     MIN(price) AS min_price,
