@@ -1,0 +1,54 @@
+/*
+En este proyecto tenemos una tablas con los siguientes campos:
+
+TABLA: accomodation_host_searches
+accommodates
+amenities
+bathrooms
+bed_type
+bedrooms
+beds
+cancellation_policy
+city
+cleaning_fee
+host_identity_verified
+host_response_rate
+host_since
+id
+neighbourhood
+number_of_reviews
+price
+property_type
+review_scores_rating
+room_type
+zipcode
+
+La misión es:
+A) Crear una segmentación por número de reseñas de cada propiedad
+B) Obtener la información agregada (monto de renta) por segmento:
+  i) Mínimo
+  ii) Promedio
+  iii) Máximo
+*/ 
+
+WITH segmentacion AS
+    (SELECT 
+        id,
+        price,
+        number_of_reviews,
+        CASE
+            WHEN number_of_reviews > 40 THEN 'Hot'
+            WHEN number_of_reviews > 15 THEN 'Popular'
+            WHEN number_of_reviews > 5 THEN 'Trending Up'
+            WHEN number_of_reviews > 0 THEN 'Rising'
+            Else 'New'
+        END as segmento_resenas
+    FROM airbnb_host_searches)
+    
+SELECT
+    segmento_resenas,
+    MIN(price) AS min_price,
+    AVG(price) AS avg_price,
+    MAX(price) AS max_price
+FROM segmentacion
+GROUP BY segmento_resenas;
