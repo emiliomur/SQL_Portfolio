@@ -20,26 +20,23 @@ customer_status AS
     DATEDIFF(a.date, b.date) AS days_since_last_purchase,
     DATEDIFF(
       CASE 
-        WHEN a.customer_order_ranking_inverse = 1 THEN current_date 
+        WHEN a.customer_order_ranking_inverse = 1 THEN CURRENT_DATE
         ELSE c.date 
       END, a.date) AS days_until_next_purchase,
     CASE
       WHEN a.customer_order_ranking_inverse = 1
-        AND DATEDIFF(
-          CASE
-            WHEN a.customer_order_ranking_inverse = 1 THEN CURRENT_DATE
-            ELSE c.date, a.date) > 180 THEN 'Inactive'
+        AND DATEDIFF(CURRENT_DATE, a.date) > 180 THEN 'Inactive' ELSE 'Active'
           END AS current_active_status
     FROM new_customers AS a
     LEFT JOIN new_customers AS b 
       ON a.customer = b.customer
-        AND a.customer_order_rank = b.customer_order_rank +1
+        AND a.customer_order_ranking = b.customer_order_ranking +1
     LEFT JOIN new_customers AS c 
       ON a.customer = c.customer
-        AND a.customer_order_rank = c.customer_order_rank - 1)
+        AND a.customer_order_ranking = c.customer_order_ranking - 1)
 
 SELECT
-  id_orden,
+  id_order,
   customer,
   date,
   customer_order_ranking,
@@ -50,12 +47,12 @@ SELECT
   days_until_next_purchase,
   CASE
     WHEN customer_order_ranking = 1 THEN 'first customer order'
-    WHEN customer_order_ranking = 1 THEN 'last customer order'
+    WHEN customer_order_ranking_inverse = 1 THEN 'last customer order'
     ELSE 'customer_order'
   END AS customer_order_type,
-  FIRST_VALUE(current_active_status) OVER (PARTITION BY customer ORDER BY date DESC) AS current_active_status
+  FIRST_VALUE(current_active_status) OVER (PARTITION BY customer ORDER BY date DESC) AS current_active_status,
   CASE
-    WHEN days_until_next_purchas > 180 THEN 'Inactive'
+    WHEN days_until_next_purchase > 180 THEN 'Inactive'
     ELSE 'Active'
   END AS transaction_next_active_status,
   CASE
