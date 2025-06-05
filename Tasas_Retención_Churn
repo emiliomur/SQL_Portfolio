@@ -1,0 +1,43 @@
+/*
+En este proyecto tenemos una tabla con información de ventas
+
+TABLA: ventas
+id_orden
+cliente
+id_producto
+monto
+fecha
+
+La misión es investigar las proporciones de clientes retenidos y clientes perdidos (churn) entre ambos periodos (enero 2024 y enero 2025):
+*/ 
+
+--Obtenemos los clientes únicos del primer periodo con una CTE
+WITH ene24 AS 
+  (SELECT
+     DISTINCT cliente
+   FROM ventas
+   WHERE fecha >= '2024-01-01' AND fecha <= '2024-01-31'),
+
+--Obtenemos los clientes únicos del segundo periodo con otra CTE
+ene25 AS
+  (SELECT
+     DISTINCT cliente
+   FROM ventas
+   WHERE fecha >= '2025-01-01' AND fecha <= '2025-01-31'),
+
+--Obtenemos la intersección para quedarnos con los clientes retenidos
+clientes_retenidos AS
+  (SELECT
+     a.cliente
+   FROM ene24 AS a
+   INNER JOIN ene25 AS b
+   USING (cliente)),
+
+--Obtenemos las proporciones de clientes retenidos y clientes perdidos (churn)
+SELECT
+  (COUNT(DISTINCT d.cliente)*100.00) / (COUNT(DISTINCT c.cliente)) AS ret,
+  ((COUNT(DISTINCT c.cliente)*100.00 - COUNT(DISTINCT d.cliente)*100.00) / COUNT(DISTINCT c.cliente)) AS churn
+FROM ene24 AS c
+LEFT JOIN ene25 AS d
+USING (cliente)
+
